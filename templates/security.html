@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="welcome-row">
+    <div>
+        <div class="eyebrow">CENTRO DE SEGURIDAD</div>
+        <h1>Seguridad y cifrado</h1>
+        <p class="muted">Funcionamiento de los patrones Proxy y Decorator.</p>
+    </div>
+    <span class="status-pill">● Protección activa</span>
+</div>
+
+<div class="security-grid">
+
+    <div class="security-card">
+        <span class="security-symbol blue">◈</span>
+        <h2>Proxy</h2>
+        <span class="tag">Control de acceso</span>
+
+        <p>Verifica el rol y la identidad antes de consultar o modificar información.</p>
+
+        <ul>
+            <li>Administrador: consulta y modifica.</li>
+            <li>Estudiante: consulta su propio registro.</li>
+            <li>Los intentos no autorizados se rechazan y registran.</li>
+        </ul>
+    </div>
+
+    <div class="security-card">
+        <span class="security-symbol green">▣</span>
+        <h2>Decorator</h2>
+        <span class="tag green-tag">Cifrado Fernet</span>
+
+        <p>Envuelve el repositorio SQLite y cifra al guardar; descifra al recuperar información autorizada.</p>
+
+        <ul>
+            <li>SQLite conserva el contenido cifrado.</li>
+            <li>El descifrado ocurre después del control Proxy.</li>
+            <li>La clave se guarda fuera de la base de datos.</li>
+        </ul>
+    </div>
+
+</div>
+
+<div class="form-card">
+    <h2>Vista del dato almacenado</h2>
+    <p class="muted">Fragmento del contenido cifrado directamente en SQLite.</p>
+
+    <pre class="cipher">{{ encrypted_preview }}</pre>
+</div>
+
+{% if actor.role == 'admin' %}
+
+<div class="form-card">
+
+    <div class="eyebrow">HERRAMIENTA ADMINISTRATIVA</div>
+
+    <h2>Descifrar información académica</h2>
+
+    <p class="muted">
+        Selecciona un estudiante. El Proxy comprobará tu rol
+        y el Decorator recuperará los datos descifrados.
+    </p>
+
+    <form method="POST" class="form-grid">
+
+        <label>
+            Estudiante
+
+            <select name="student_id" required>
+
+                <option value="">Selecciona un estudiante</option>
+
+                {% for student in student_options %}
+
+                <option value="{{ student.user_id }}"
+                    {% if decrypted_student and decrypted_student.user_id == student.user_id %}
+                    selected
+                    {% endif %}>
+
+                    {{ student.full_name }} ({{ student.username }})
+
+                </option>
+
+                {% endfor %}
+
+            </select>
+        </label>
+
+        <div class="form-actions">
+            <button class="btn primary" type="submit">
+                ◈ Autorizar y descifrar
+            </button>
+        </div>
+
+    </form>
+
+    {% if decrypted_student %}
+
+    <div class="decrypted-panel">
+
+        <div class="decrypted-heading">
+
+            <div>
+                <span class="tag green-tag">Consulta autorizada</span>
+                <h3>Información académica original</h3>
+            </div>
+
+            <span class="result ok">DESCIFRADO</span>
+
+        </div>
+
+        <div class="data-grid">
+
+            <div class="data-card">
+                <small>Nombre</small>
+                <b>{{ decrypted_student.full_name }}</b>
+            </div>
+
+            <div class="data-card">
+                <small>Usuario</small>
+                <b>{{ decrypted_student.username }}</b>
+            </div>
+
+            <div class="data-card">
+                <small>Código estudiantil</small>
+                <b>{{ decrypted_student.academic_data.student_id }}</b>
+            </div>
+
+            <div class="data-card">
+                <small>Programa</small>
+                <b>{{ decrypted_student.academic_data.program }}</b>
+            </div>
+
+            <div class="data-card">
+                <small>Semestre</small>
+                <b>{{ decrypted_student.academic_data.semester }}</b>
+            </div>
+
+            <div class="data-card">
+                <small>Promedio</small>
+                <b>{{ decrypted_student.academic_data.average }}</b>
+            </div>
+
+            <div class="data-card">
+                <small>Correo</small>
+                <b>{{ decrypted_student.academic_data.email }}</b>
+            </div>
+
+        </div>
+
+        <p class="muted decrypt-note">
+            Información recuperada mediante Proxy y Decorator.
+            SQLite mantiene almacenado el contenido cifrado.
+        </p>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+<div class="section-heading">
+    <div>
+        <h2>Eventos de seguridad</h2>
+        <p class="muted">Operaciones recientes.</p>
+    </div>
+</div>
+
+<div class="table-card">
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Usuario</th>
+                <th>Operación</th>
+                <th>Resultado</th>
+                <th>Fecha</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for log in logs %}
+
+            <tr>
+                <td>{{ log.username }}</td>
+                <td>{{ log.action }}</td>
+
+                <td>
+                    <span class="result {{ 'ok' if log.result == 'PERMITIDO' else 'denied' }}">
+                        {{ log.result }}
+                    </span>
+                </td>
+
+                <td>{{ log.created_at }}</td>
+            </tr>
+
+            {% else %}
+
+            <tr>
+                <td colspan="4">Sin eventos registrados.</td>
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% else %}
+
+<div class="form-card">
+    <h2>Acceso administrativo</h2>
+    <p class="muted">
+        La visualización administrativa del contenido descifrado
+        solo está disponible para el administrador.
+    </p>
+</div>
+
+{% endif %}
+
+{% endblock %}

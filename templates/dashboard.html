@@ -1,0 +1,282 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="welcome-row">
+    <div>
+        <div class="eyebrow">PANEL DE CONTROL · D1</div>
+        <h1>Dashboard</h1>
+        <p class="muted">Consulta tu información académica y rendimiento estudiantil.</p>
+    </div>
+    <span class="status-pill">● Sistema protegido</span>
+</div>
+
+{% if student %}
+
+<!-- BIENVENIDA -->
+<div class="hero">
+    <div>
+        <span class="hero-kicker">CENTRO ACADÉMICO EDUCONNECT</span>
+        <h2>¡Hola, {{ actor.full_name.split(' ')[0] }}!</h2>
+        <p>Consulta tus materias, calificaciones y rendimiento académico.</p>
+        <a href="{{ url_for('security') }}">Ver estado de seguridad →</a>
+    </div>
+    <div class="hero-shield">🎓</div>
+</div>
+
+<!-- INFORMACIÓN DEL ESTUDIANTE -->
+<div class="section-heading">
+    <div>
+        <h2>Mi información académica</h2>
+        <p class="muted">Información estudiantil protegida mediante Proxy y Decorator.</p>
+    </div>
+    <a class="text-link" href="{{ url_for('students') }}">Ver detalle →</a>
+</div>
+
+<div class="data-grid">
+    <div class="data-card">
+        <small>Código estudiantil</small>
+        <b>{{ student.academic_data.student_id }}</b>
+    </div>
+    <div class="data-card">
+        <small>Programa</small>
+        <b>{{ student.academic_data.program }}</b>
+    </div>
+    <div class="data-card">
+        <small>Semestre</small>
+        <b>{{ student.academic_data.semester }}</b>
+    </div>
+    <div class="data-card">
+        <small>Promedio general</small>
+        <b>{{ average }}</b>
+    </div>
+</div>
+
+<!-- ESTADÍSTICAS -->
+<div class="section-heading">
+    <div>
+        <h2>Rendimiento académico</h2>
+        <p class="muted">Resumen de tus resultados en las materias.</p>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <span class="stat-icon blue">▤</span>
+        <span class="muted">Materias inscritas</span>
+        <strong>{{ subjects|length }}</strong>
+        <small>Periodo académico</small>
+    </div>
+
+    <div class="stat-card">
+        <span class="stat-icon green">✓</span>
+        <span class="muted">Materias aprobadas</span>
+        <strong>{{ passed }}</strong>
+        <small>Calificación igual o superior a 3.0</small>
+    </div>
+
+    <div class="stat-card">
+        <span class="stat-icon orange">!</span>
+        <span class="muted">Materias en riesgo</span>
+        <strong>{{ at_risk }}</strong>
+        <small>Calificación inferior a 3.0</small>
+    </div>
+
+    <div class="stat-card">
+        <span class="stat-icon purple">★</span>
+        <span class="muted">Promedio del periodo</span>
+        <strong>{{ average }}</strong>
+        <small>Escala de 0.0 a 5.0</small>
+    </div>
+</div>
+
+<!-- TABLA DE MATERIAS -->
+<div class="section-heading">
+    <div>
+        <h2>Mis materias y calificaciones</h2>
+        <p class="muted">Detalle de las notas obtenidas en cada asignatura.</p>
+    </div>
+</div>
+
+<div class="table-card">
+    <table>
+        <thead>
+            <tr>
+                <th>Materia</th>
+                <th>Calificación</th>
+                <th>Estado</th>
+                <th>Progreso</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for subject in subjects %}
+            <tr>
+                <td><b>{{ subject.name }}</b></td>
+                <td>{{ "%.1f"|format(subject.grade) }}</td>
+                <td>
+                    {% if subject.grade >= 3.0 %}
+                        <span class="result ok">Aprobada</span>
+                    {% else %}
+                        <span class="result denied">En riesgo</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div style="background:rgba(255,255,255,.09);height:8px;border-radius:10px;overflow:hidden;min-width:90px;">
+                        <div style="width:{{ (subject.grade / 5 * 100)|round }}%;height:100%;background:{{ '#35c98a' if subject.grade >= 3.0 else '#f0a34a' }};border-radius:10px;"></div>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- ESTADÍSTICA DEL PROMEDIO -->
+<div class="section-heading">
+    <div>
+        <h2>Estadística de calificaciones</h2>
+        <p class="muted">Comparación de las notas por materia, en una escala de 0.0 a 5.0.</p>
+    </div>
+</div>
+
+<div class="table-card" style="padding:24px;">
+    {% for subject in subjects %}
+    <div style="margin-bottom:20px;">
+        <div style="display:flex;justify-content:space-between;gap:12px;margin-bottom:8px;">
+            <span>{{ subject.name }}</span>
+            <b>{{ "%.1f"|format(subject.grade) }}</b>
+        </div>
+        <div style="height:12px;background:rgba(255,255,255,.09);border-radius:10px;overflow:hidden;">
+            <div style="width:{{ (subject.grade / 5 * 100)|round }}%;height:100%;background:{{ '#35c98a' if subject.grade >= 3.0 else '#f0a34a' }};border-radius:10px;"></div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <p class="muted" style="margin-top:18px;">
+        Promedio general: <b>{{ average }} / 5.0</b>
+    </p>
+</div>
+
+<div class="bottom-grid">
+    <a class="feature-card" href="{{ url_for('students') }}">
+        ♙
+        <div>
+            <b>Datos de estudiantes</b>
+            <small>Consulta la información protegida.</small>
+        </div>
+        →
+    </a>
+
+    <a class="feature-card" href="{{ url_for('password') }}">
+        ▣
+        <div>
+            <b>Historial de contraseñas</b>
+            <small>Gestiona tus credenciales.</small>
+        </div>
+        →
+    </a>
+</div>
+
+{% else %}
+
+<!-- DASHBOARD DEL ADMINISTRADOR -->
+<div class="hero">
+    <div>
+        <span class="hero-kicker">CENTRO DE SEGURIDAD EDUCONNECT</span>
+        <h2>Hola, {{ actor.full_name.split(' ')[0] }}.</h2>
+        <p>Tu sistema cuenta con control de acceso y protección de datos académicos.</p>
+        <a href="{{ url_for('security') }}">Ver estado de seguridad →</a>
+    </div>
+    <div class="hero-shield">⬡</div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <span class="stat-icon blue">♙</span>
+        <span class="muted">Estudiantes registrados</span>
+        <strong>{{ total }}</strong>
+        <small>Base de datos SQLite</small>
+    </div>
+    <div class="stat-card">
+        <span class="stat-icon green">◈</span>
+        <span class="muted">Patrón Proxy</span>
+        <strong>Activo</strong>
+        <small>Verificación de permisos</small>
+    </div>
+    <div class="stat-card">
+        <span class="stat-icon purple">▣</span>
+        <span class="muted">Patrón Decorator</span>
+        <strong>Activo</strong>
+        <small>Cifrado académico</small>
+    </div>
+    <div class="stat-card">
+        <span class="stat-icon orange">⌑</span>
+        <span class="muted">Historial</span>
+        <strong>3</strong>
+        <small>Últimas contraseñas</small>
+    </div>
+</div>
+
+<div class="section-heading">
+    <div>
+        <h2>Actividad reciente</h2>
+        <p class="muted">Últimos eventos de seguridad.</p>
+    </div>
+    <a class="text-link" href="{{ url_for('logs') }}">Ver todos →</a>
+</div>
+
+<div class="table-card">
+    <table>
+        <thead>
+            <tr>
+                <th>Usuario</th>
+                <th>Operación</th>
+                <th>Resultado</th>
+                <th>Fecha</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in recent_logs %}
+            <tr>
+                <td>{{ log.username }}</td>
+                <td>{{ log.action }}</td>
+                <td>
+                    <span class="result {{ 'ok' if log.result == 'PERMITIDO' else 'denied' }}">
+                        {{ log.result }}
+                    </span>
+                </td>
+                <td>{{ log.created_at }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4">Sin actividad registrada.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="bottom-grid">
+    <a class="feature-card" href="{{ url_for('students') }}">
+        ♙
+        <div>
+            <b>Datos de estudiantes</b>
+            <small>Consulta la información protegida.</small>
+        </div>
+        →
+    </a>
+
+    <a class="feature-card" href="{{ url_for('security') }}">
+        ◈
+        <div>
+            <b>Seguridad y cifrado</b>
+            <small>Administra la protección de datos.</small>
+        </div>
+        →
+    </a>
+</div>
+
+{% endif %}
+
+{% endblock %}
